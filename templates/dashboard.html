@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>How Can I Help You</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500&family=Roboto&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+  <style>
+    body {
+    background: url('../static/pic/Gemini_Generated_Image_9c8ef89c8ef89c8e.png') no-repeat center center fixed; background-size: cover; 
+    display: flex;
+    justify-content: center;   /* Horizontal centering */
+    align-items: center;       /* Vertical centering */
+    height: 100vh;             /* Full viewport height */
+    margin: 0;                 /* Remove default body margin */
+  }
+
+   .dashboard-container { max-width:900px; margin:0 auto; background: rgba(255,255,255,0.02); border:1px solid #00f5d4; padding:30px; border-radius:12px; }
+   .dashboard-container { transform: scale(1.05); box-shadow: 0 0 15px #00f5d4; }
+  </style>
+</head>
+<body>
+   <div class="help-container">
+    <div class="dashboard-container">
+     <div class="header-title">How Can I Help You?</div>
+     <div class="help-intro">Choose a mode below:</div>
+
+     <div class="help-cards">
+       <a class="help-card1" href="{{ url_for('learn') }}">
+         <div class="card-title">📘 Learn Mode</div>
+         <div class="card-desc">Guided lessons for deaf/mute learners.</div>
+       </a>
+
+       <a class="help-card2" href="{{ url_for('index') }}">
+         <div class="card-title">🗣 Interpret Mode</div>
+         <div class="card-desc">Live detection and translation (webcam).</div>
+       </a>
+   </div>
+  </div>
+
+    <div style="text-align:center; margin-top:18px;">
+      <a href="{{ url_for('about') }}" class="info-btn">ℹ️nfo</a>
+      &nbsp;&nbsp;
+      <a href="{{ url_for('logout') }}" class="logout-btn">Logout</a>
+    </div>
+  </div>
+</body>
+</html>

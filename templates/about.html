@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>About Project - Sign Language Environment</title>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600&family=Roboto&display=swap" rel="stylesheet">
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: 'Roboto', sans-serif;
+      background: url('{{ url_for("static", filename="pic/PCzhqd.jpg") }}') no-repeat center center fixed;
+      background-size: cover;
+      color: #00f5d4;
+      overflow-x: hidden;
+    }
+
+    h1, h2, h3 {
+      font-family: 'Orbitron', sans-serif;
+      text-shadow: 0 0 15px #00f5d4;
+      margin-bottom: 12px;
+    }
+
+    h1 {
+      color: white;
+      font-size: 36px;
+      text-align: center;
+      animation: glowPulse 2s infinite;
+    }
+
+    h2 {
+      font-size: 28px;
+      margin-top: 24px;
+    }
+
+    h3 {
+      font-size: 20px;
+      margin-top: 20px;
+    }
+
+    p, li {
+      font-size: 16px;
+      line-height: 1.6;
+      margin-bottom: 12px;
+      color: #ffffff;
+      opacity: 0; /* Initially hidden for line-by-line animation */
+    }
+
+    ul {
+      margin-left: 20px;
+      margin-bottom: 12px;
+    }
+
+    .about-container {
+      max-width: 1100px;
+      margin: 60px auto;
+      padding: 30px;
+      background: rgba(0, 0, 0, 0.35);
+      border-radius: 12px;
+      border: 1px solid #00f5d4;
+      box-shadow: 0 0 15px #00f5d4;
+      transform: translateY(-50px);
+      opacity: 0;
+      animation: slideInTop 1s forwards, containerGlow 2s infinite alternate;
+    }
+
+    .section-card {
+      background: rgba(0, 245, 212, 0.05);
+      border: 1px solid #00f5d4;
+      padding: 16px 20px;
+      border-radius: 12px;
+      margin-bottom: 20px;
+      transform: translateX(-100px);
+      opacity: 0;
+    }
+
+    .back-btn {
+      position: fixed;
+      bottom: 25px;
+      left: 25px;
+      background: #00f5d4;
+      padding: 10px 16px;
+      border-radius: 8px;
+      color: black;
+      text-decoration: none;
+      font-weight: bold;
+      box-shadow: 0 0 12px #00f5d4;
+      transition: 0.3s;
+      z-index: 1000;
+    }
+
+    .back-btn:hover {
+      transform: scale(1.05);
+      box-shadow: 0 0 25px #00f5d4;
+    }
+
+    /* Animations */
+    @keyframes glowPulse {
+      0%, 100% { text-shadow: 0 0 10px #00f5d4; }
+      50% { text-shadow: 0 0 25px #00f5d4; }
+    }
+
+    @keyframes containerGlow {
+      0%, 100% { box-shadow: 0 0 15px #00f5d4; }
+      50% { box-shadow: 0 0 30px #00ffcc; }
+    }
+
+    @keyframes slideInTop {
+      from { transform: translateY(-50px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+
+    @keyframes slideInLeft {
+      from { transform: translateX(-100px); opacity: 0; }
+      to { transform: translateX(0); opacity: 1; }
+    }
+
+    @keyframes slideContentLeft {
+      from { opacity: 0; transform: translateX(-30px); }
+      to { opacity: 1; transform: translateX(0); }
+    }
+
+    @keyframes slideContentRight {
+      from { opacity: 0; transform: translateX(30px); }
+      to { opacity: 1; transform: translateX(0); }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="about-container">
+    <h1>🤖 Sign Language Environment</h1>
+    <div class="space-gap1"><br></div>
+    <div class="space-gap2"><br></div>
+
+    <div class="section-card">
+      <h2>Project Overview</h2>
+      <p>The <b>Sign Language Environment</b> is a real-time web-based application designed to bridge the communication gap between deaf/mute and hearing individuals. It detects hand gestures via webcam, translates them into text and voice, and provides an interactive interface for learning and interpreting gestures.</p>
+    </div>
+
+    <div class="section-card">
+      <h2>Objectives</h2>
+      <ul>
+        <li>Enable inclusive communication for deaf/mute users.</li>
+        <li>Provide a platform to learn and understand gestures interactively.</li>
+        <li>Use AI/ML to detect gestures accurately in real-time.</li>
+        <li>Promote awareness about sign language and accessibility.</li>
+      </ul>
+    </div>
+
+    <div class="section-card">
+      <h2>Technical Stack</h2>
+      <ul>
+        <li>Frontend: HTML, CSS, JavaScript with animated neon-glow UI.</li>
+        <li>Backend: Python Flask Web Framework.</li>
+        <li>Machine Learning & AI: OpenCV and MediaPipe for hand gesture detection.</li>
+        <li>Database: SQLite (or any Flask-compatible DB for user management).</li>
+        <li>Speech Synthesis: Web Speech API for voice output.</li>
+      </ul>
+    </div>
+
+    <div class="section-card">
+      <h2>Features</h2>
+      <ul>
+        <li>Real-time gesture detection via webcam.</li>
+        <li>Learn Mode: Interactive lessons for users to learn gestures.</li>
+        <li>Interpret Mode: Converts gestures into readable text & voice.</li>
+        <li>Gesture history tracking and live feedback.</li>
+        <li>Responsive, neon-glow UI with animated cards and hover effects.</li>
+      </ul>
+    </div>
+
+    <div class="section-card">
+      <h2>Developer</h2>
+      <p>Developed by <b>Owaiz Ahmed</b> as a <b>Final Year Engineering Project</b>.<br>
+        The project demonstrates the combination of full-stack development, AI/ML implementation, and professional UI/UX design with animations.</p>
+    </div>
+  </div>
+
+  <a href="{{ url_for('dashboard') }}" class="back-btn">⬅ Back</a>
+
+  <script>
+    // Scroll-triggered animation
+    const observer = new IntersectionObserver(entries => {
+      entries.forEach(entry => {
+        if(entry.isIntersecting){
+          const card = entry.target;
+          card.style.animation = "slideInLeft 1s forwards";
+          // Animate content line by line
+          const lines = card.querySelectorAll('p, li, h2, h3');
+          lines.forEach((line, index) => {
+            setTimeout(() => {
+              // Alternate cards: left/right content animation
+              if(Array.from(card.parentNode.children).indexOf(card) % 2 === 0){
+                line.style.animation = "slideContentLeft 0.6s forwards";
+              } else {
+                line.style.animation = "slideContentRight 0.6s forwards";
+              }
+            }, index * 300);
+          });
+          observer.unobserve(card);
+        }
+      });
+    }, { threshold: 0.3 });
+
+    document.querySelectorAll('.section-card').forEach(card => observer.observe(card));
+  </script>
+
+</body>
+</html>

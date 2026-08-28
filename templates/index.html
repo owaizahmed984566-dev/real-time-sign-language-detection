@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Gesture Recognition Dashboard</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500&family=Roboto&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+  <style>
+    h3 { transform: scale(1.05); text-shadow: 0 0 15px #00f5d4; font-family: 'Orbitron', sans-serif; }
+  </style>
+</head>
+
+<body>
+  <div class="video-container">
+    <div class="header-title">🎥 Live Gestures Detection</div>
+    <img id="cameraFeed" class="video-frame" alt="Webcam Feed" />
+    <div class="camera-btn-container">
+      <button id="toggleCamera" class="camera-btn">Start Camera</button>
+      <button id="toggleLandmarksBtn" class="camera-btn">Hide Hand Lines</button>
+      <button id="toggleVoiceBtn" class="camera-btn">Voice: ON</button>
+      <button id="toggleMeaningBtn" class="camera-btn" style="display:none;">Meaning: OFF</button>
+    </div>
+  </div>
+
+  <div class="sidebar">
+    <div class="title">🖐 Gesture Dashboard</div>
+    <div class="welcome-text">👋 Welcome, <b>{{ username }}</b>!</div>
+
+    <div class="gesture-box">
+      <div class="gesture-label" id="gestureLabel">Loading...</div>
+    </div>
+
+    <div class="gesture-box">
+      <div class="gesture-label" id="gestureLabel">Gesture Meaning</div>
+      <div class="gesture-meaning" id="gestureMeaning" style="display:none;"></div>
+    </div>
+
+    <div class="gesture-box">
+      <div class="gesture-label" id="handLabel">Hand: Unknown</div>
+    </div>
+
+    <div class="history-box" id="historyBox">
+      <div class="history-entry"><h3>--> Gesture History</h3></div>
+      <div id="gestureHistory"></div>
+    </div>
+
+    <div style="text-align:center; margin-top:20px;">
+      <a href="{{ url_for('dashboard') }}" class="exit-btn">⬅ Exit</a>
+    </div>
+  </div>
+  <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+
+</body>
+</html>

@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Learn Hand Gestures</title>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600&display=swap" rel="stylesheet" />
+  <style>
+    body {
+      background: url('{{ url_for("static", filename="pic/background.jpg") }}') no-repeat center center fixed;
+      background-size: cover;
+      font-family: 'Orbitron', sans-serif;
+      margin: 0;
+      padding: 0;
+      color: #00f5d4;
+      overflow-x: hidden;
+    }
+
+    p {
+      color: white;
+      font-family: Roboto, sans-serif;
+      font-size: 22px;
+      margin-bottom: 6px;
+      text-shadow: 0 0 8px #00f5d4;
+    }
+    
+    h1 {
+      font-size: 32px;
+      text-align: center;
+      margin-top: 28px;
+      text-shadow: 0 0 12px #00f5d4;
+      animation: glowPulse 2s infinite;
+    }
+
+    @keyframes glowPulse {
+      0%, 100% { text-shadow: 0 0 10px #00f5d4; }
+      50% { text-shadow: 0 0 25px #00f5d4; }
+    }
+
+    @keyframes slideInTop { from { transform: translateY(-100%); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+    @keyframes slideInBottom { from { transform: translateY(100%); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+    @keyframes slideInLeft { to { transform: translateX(0); opacity: 1; } }
+    @keyframes clickAnim { 0% { transform: scale(1); } 50% { transform: scale(1.2); } 100% { transform: scale(1); } }
+
+    .learn-container {
+      max-width: 1100px;
+      margin: 40px auto;
+      padding: 20px;
+      background: rgba(0, 0, 0, 0.35);
+      border-radius: 12px;
+      border: 1px solid #00f5d4;
+      box-shadow: 0 0 15px #00f5d4;
+      transform: translateX(-100%);
+      opacity: 0;
+      animation: slideInTop 1s ease-out forwards;
+      position: relative;
+    }
+
+    .gesture-gallery {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 16px;
+      margin-top: 12px;
+    }
+
+    .gesture-card {
+      background: rgba(0, 255, 196, 0.05);
+      border: 1px solid #00f5d4;
+      padding: 18px;
+      border-radius: 12px;
+      text-align: center;
+      font-size: 18px;
+      cursor: pointer;
+      transition: 0.3s;
+      opacity: 0;
+      transform: translateX(100px);
+      animation: slideInBottom 0.6s forwards;
+    }
+
+    .gesture-card:nth-child(1) { animation-delay: 1.2s; }
+    .gesture-card:nth-child(2) { animation-delay: 1.4s; }
+    .gesture-card:nth-child(3) { animation-delay: 1.6s; }
+    .gesture-card:nth-child(4) { animation-delay: 1.8s; }
+    .gesture-card:nth-child(5) { animation-delay: 2.0s; }
+    .gesture-card:nth-child(6) { animation-delay: 2.2s; }
+    .gesture-card:nth-child(7) { animation-delay: 2.4s; }
+    .gesture-card:nth-child(8) { animation-delay: 2.6s; }
+
+    .gesture-card:hover {
+      transform: scale(1.05);
+      box-shadow: 0 0 20px #00f5d4;
+      text-shadow: 0 0 15px #00f5d4;
+    }
+
+    .gesture-card img,
+    .gesture-card video {
+      max-width: 100%;
+      border-radius: 8px;
+      margin-bottom: 8px;
+      transition: opacity 0.4s ease;
+      display: block;
+    }
+
+    .gesture-card video { display: none; }
+    .gesture-card:hover img { display: none; }
+    .gesture-card:hover video { display: block; }
+
+    .gesture-name { font-weight: bold; text-shadow: 0 0 10px #00f5d4; }
+
+    .sound-toggle {
+      position: fixed;
+      top: 25px;
+      right: 30px;
+      background: rgba(0, 245, 212, 0.1);
+      border: 1px solid #00f5d4;
+      border-radius: 10px;
+      padding: 10px 18px;
+      color: #00f5d4;
+      cursor: pointer;
+      font-size: 16px;
+      font-weight: bold;
+      box-shadow: 0 0 15px #00f5d4;
+      transition: 0.3s;
+      opacity: 0;
+      transform: translateX(-100px);
+      animation: slideInLeft 0.8s ease-out forwards;
+      animation-delay: 3.2s;
+    }
+
+    .sound-toggle:hover { transform: scale(1.05); box-shadow: 0 0 25px #00f5d4; }
+
+    .back-btn {
+      position: fixed;
+      bottom: 25px;
+      left: 25px;
+      background: #00f5d4;
+      padding: 10px 16px;
+      border-radius: 8px;
+      color: black;
+      text-decoration: none;
+      font-weight: bold;
+      box-shadow: 0 0 12px #00f5d4;
+      transition: 0.3s;
+      z-index: 1000;
+    }
+
+    .back-btn:hover { transform: scale(1.05); box-shadow: 0 0 25px #00f5d4; }
+
+    .voice-buttons-container {
+      display: flex;
+      justify-content: center;
+      gap: 20px;
+      margin-top: 25px;
+      display: none; /* hidden initially */
+    }
+
+    .voice-buttons-container.show { display: flex; }
+
+    .voice-btn {
+      background: rgba(0, 245, 212, 0.1);
+      border: 1px solid #00f5d4;
+      border-radius: 8px;
+      padding: 8px 14px;
+      cursor: pointer;
+      color: #00f5d4;
+      font-weight: bold;
+      transition: 0.3s;
+    }
+
+    .voice-btn.active { background: #00f5d4; color: black; }
+    .voice-btn:hover { transform: scale(1.1); box-shadow: 0 0 20px #00f5d4; }
+    .voice-btn.clickAnim { animation: clickAnim 0.3s forwards; }
+
+  </style>
+</head>
+<body>
+
+<h1>Learn Hand Gestures</h1>
+
+<div class="learn-container">
+  <p>Select a gesture to see its demonstration:</p>
+  <div class="gesture-gallery">
+
+    <!-- Gesture Cards -->
+    <div class="gesture-card" data-name="Hi / Hello / Bye 👋" data-meaning="Greeting gesture">
+      <img src="{{ url_for('static', filename='pic/hi.png') }}" alt="Hi / Hello / Bye" />
+      <video src="{{ url_for('static', filename='videos/hi2.mp4') }}" loop></video>
+      <div class="gesture-name">(Hi / Hello / Bye)👋</div>
+    </div>
+
+    <div class="gesture-card" data-name="Fist 👊" data-meaning="Strong or Stop gesture">
+      <img src="{{ url_for('static', filename='pic/fist.png') }}" alt="Fist" />
+      <video src="{{ url_for('static', filename='videos/fist1.mp4') }}" loop></video>
+      <div class="gesture-name">Fist 👊</div>
+    </div>
+
+    <div class="gesture-card" data-name="Call Me 📞" data-meaning="Phone call gesture">
+      <img src="{{ url_for('static', filename='pic/callme.png') }}" alt="Call Me" />
+      <video src="{{ url_for('static', filename='videos/callme1.mp4') }}" loop></video>
+      <div class="gesture-name">Call Me 📞</div>
+    </div>
+
+    <div class="gesture-card" data-name="I Love You ❤️" data-meaning="Gesture expressing love">
+      <img src="{{ url_for('static', filename='pic/iloveyou.png') }}" alt="I Love You" />
+      <video src="{{ url_for('static', filename='videos/iloveyou1.mp4') }}" loop></video>
+      <div class="gesture-name">I Love You ❤️</div>
+    </div>
+
+    <div class="gesture-card" data-name="Rock On 🤘" data-meaning="Gesture for rock music or excitement">
+      <img src="{{ url_for('static', filename='pic/rockon.png') }}" alt="Rock On" />
+      <video src="{{ url_for('static', filename='videos/rockon3.mp4') }}" loop></video>
+      <div class="gesture-name">Rock On 🤘</div>
+    </div>
+
+    <div class="gesture-card" data-name="Peace ✌️" data-meaning="Victory or calm gesture">
+      <img src="{{ url_for('static', filename='pic/peace.png') }}" alt="Peace" />
+      <video src="{{ url_for('static', filename='videos/peace2.mp4') }}" loop></video>
+      <div class="gesture-name">Peace ✌️</div>
+    </div>
+
+    <div class="gesture-card" data-name="Point Up ☝️" data-meaning="Indicates pointing upwards">
+      <img src="{{ url_for('static', filename='pic/pointup.png') }}" alt="Point Up" />
+      <video src="{{ url_for('static', filename='videos/pointup.mp4') }}" loop></video>
+      <div class="gesture-name">Point Up ☝️</div>
+    </div>
+
+    <div class="gesture-card" data-name="OK 👌" data-meaning="Gesture meaning everything is fine">
+      <img src="{{ url_for('static', filename='pic/ok.png') }}" alt="OK" />
+      <video src="{{ url_for('static', filename='videos/ok1.mp4') }}" loop></video>
+      <div class="gesture-name">OK 👌</div>
+    </div>
+
+  </div>
+
+  <!-- Name/Meaning Buttons Horizontally -->
+  <div class="voice-buttons-container" id="voiceButtonsContainer">
+    <button class="voice-btn active" id="nameBtn">Gesture Name </button>
+    <button class="voice-btn" id="meaningBtn">Gesture Meaning</button>
+  </div>
+</div>
+
+<!-- Back Button outside -->
+<a href="{{ url_for('dashboard') }}" class="back-btn">⬅ Back</a>
+
+<!-- Sound Toggle -->
+<div class="sound-toggle" id="soundToggle">🔊 Sound On</div>
+
+<script>
+const cards = document.querySelectorAll('.gesture-card');
+const soundToggle = document.getElementById('soundToggle');
+const voiceButtonsContainer = document.getElementById('voiceButtonsContainer');
+const nameBtn = document.getElementById('nameBtn');
+const meaningBtn = document.getElementById('meaningBtn');
+
+let soundOn = false;
+let nameOn = true;
+let meaningOn = false;
+
+// Show/hide voice buttons based on sound toggle
+soundToggle.addEventListener('click', () => {
+  soundOn = !soundOn;
+  soundToggle.textContent = soundOn ? '🔇 Sound Off' : '🔊 Sound On';
+  soundToggle.style.boxShadow = soundOn ? '0 0 25px #00ffcc' : '0 0 15px #00f5d4';
+  if(soundOn){
+    voiceButtonsContainer.classList.add('show');
+  } else {
+    voiceButtonsContainer.classList.remove('show');
+    speechSynthesis.cancel();
+  }
+});
+
+// Mutually exclusive Name/Meaning buttons
+nameBtn.addEventListener('click', () => {
+  if(!soundOn) return;
+  nameOn = true;
+  meaningOn = false;
+  nameBtn.classList.add('active');
+  meaningBtn.classList.remove('active');
+  nameBtn.classList.add('clickAnim');
+  setTimeout(() => nameBtn.classList.remove('clickAnim'), 300);
+});
+
+meaningBtn.addEventListener('click', () => {
+  if(!soundOn) return;
+  nameOn = false;
+  meaningOn = true;
+  meaningBtn.classList.add('active');
+  nameBtn.classList.remove('active');
+  meaningBtn.classList.add('clickAnim');
+  setTimeout(() => meaningBtn.classList.remove('clickAnim'), 300);
+});
+
+// Hover cards to play video + speak every time
+cards.forEach(card => {
+  const video = card.querySelector('video');
+
+  card.addEventListener('mouseenter', () => {
+    video.muted = !soundOn;
+    video.currentTime = 0;
+    video.play();
+
+    if(soundOn){
+      let text = '';
+      if(nameOn) text += card.dataset.name + ' ';
+      if(meaningOn) text += card.dataset.meaning;
+
+      if(text){
+        const utter = new SpeechSynthesisUtterance(text);
+        utter.lang = 'en-US';
+        speechSynthesis.speak(utter);
+      }
+    }
+  });
+
+  card.addEventListener('mouseleave', () => {
+    video.pause();
+    speechSynthesis.cancel();
+  });
+});
+</script>
+
+</body>
+</html>

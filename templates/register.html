@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Register - Sign Language App</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+  <style>
+    body {
+      background: url('../static/pic/_Thumbs Up in Digital Light_.png') no-repeat center center fixed;
+      background-size: cover;
+      font-family: Roboto, sans-serif;
+      height: 100vh;
+      margin: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      position: relative;
+    }
+
+    .register-box {
+      background: rgba(255, 255, 255, 0.03);
+      padding: 28px;
+      border-radius: 12px;
+      width: 360px;
+      text-align: center;
+      box-shadow: 0 0 15px #00f5d4;
+      transform: scale(1.05);
+      z-index: 2;
+    }
+
+    input {
+      width: 94.5%;
+      padding: 10px;
+      margin: 8px 0;
+      border-radius: 8px;
+      border: none;
+      font-weight: normal;
+    }
+
+    .password-container {
+      position: relative;
+      width: 100%;
+    }
+
+    .toggle-password {
+      position: absolute;
+      top: 50%;
+      right: 12px;
+      transform: translateY(-50%);
+      cursor: pointer;
+      display: none;
+    }
+
+    .half-eye {
+      position: relative;
+      width: 26px;
+      height: 13px;
+      border-top: 2px solid rgba(0,0,0,0.5);
+      border-radius: 100px 100px 0 0;
+    }
+
+    .half-eye::after {
+      content: "";
+      position: absolute;
+      top: 4px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 7px;
+      height: 7px;
+      background-color: rgba(0,0,0,0.5);
+      border-radius: 50%;
+    }
+
+    .half-eye.active {
+      border-top-color: rgba(0,0,0,1);
+    }
+
+    .half-eye.active::after {
+      background-color: rgba(0,0,0,1);
+    }
+
+    button {
+      background: black;
+      padding: 10px;
+      border-radius: 8px;
+      border: 1px solid white;
+      font-weight: bold;
+      color: white;
+      cursor: pointer;
+      width: 100%;
+    }
+
+    .flash {
+      margin-top: 10px;
+      color: whitesmoke;
+    }
+
+    a {
+      color: #00f5d4;
+      text-decoration: none;
+    }
+
+    a:hover {
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="register-box">
+    <h2>🆕 Register</h2>
+    <form method="POST" action="{{ url_for('register') }}">
+      <input type="text" name="username" placeholder="Username" required>
+      <div class="password-container">
+        <input type="password" name="password" id="password" placeholder="Password" required>
+        <div class="toggle-password" id="togglePassword">
+          <div class="half-eye"></div>
+        </div>
+      </div>
+      <button type="submit">Register</button>
+    </form>
+
+    <div><p>Already have an account? <a href="{{ url_for('login') }}">Login</a></p></div>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        {% for category, message in messages %}
+          <div class="flash">{{ message }}</div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+  </div>
+
+  <script>
+    const passwordInput = document.getElementById('password');
+    const togglePassword = document.getElementById('togglePassword');
+    const halfEye = togglePassword.querySelector('.half-eye');
+
+    passwordInput.addEventListener('input', () => {
+      togglePassword.style.display = passwordInput.value.length > 0 ? 'block' : 'none';
+    });
+
+    togglePassword.addEventListener('click', () => {
+      const type = passwordInput.type === 'password' ? 'text' : 'password';
+      passwordInput.type = type;
+      passwordInput.style.fontWeight = type === 'text' ? 'bold' : 'normal';
+      halfEye.classList.toggle('active');
+    });
+  </script>
+
+</body>
+</html>
+

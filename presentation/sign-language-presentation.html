@@ -1,0 +1,742 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>FYP — Real Time Sign Language Detection (Presentation)</title>
+  <style>
+    body { display:flex; align-items:center; min-height:110vh; }
+
+    .diagram svg {
+  transition: transform 0.4s ease;
+}
+
+.diagram:hover svg {
+  transform: scale(1.3); /* increase by 8% */
+}
+
+
+:root{
+  --bg: #000000;
+  --surface: rgba(255,255,255,0.03);
+  --card-bg: rgba(4,8,12,0.6);
+  --card-border: rgba(255,255,255,0.06);
+  --accent-a: #00e6c3;
+  --accent-b: #5cc8ff;
+  --accent-c: #9b5cff;
+  --muted: #9aa6b2;
+  --glass: rgba(255,255,255,0.02);
+  --radius: 14px;
+  --maxw: 1400px;
+}
+html.light{
+  --bg: #ffffff;
+  --surface: rgba(2,6,23,0.03);
+  --card-bg: rgba(255,255,255,0.96);
+  --card-border: rgba(2,6,23,0.06);
+  --muted: #374151;
+  --accent-a: #00b38f;
+  --accent-b: #2ea8e6;
+  --accent-c: #7a46d9;
+}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0;font-family:Inter, 'Segoe UI', system-ui, Arial;background:var(--bg);color:var(--muted);-webkit-font-smoothing:antialiased}
+.present-root{width:100vw;height:100vh;display:flex;align-items:stretch;justify-content:center;overflow:hidden;position:relative}
+
+/* background blobs */
+.bg-layer{position:absolute;inset:0;pointer-events:none;z-index:0}
+.blob{position:absolute;border-radius:50%;filter:blur(64px);opacity:0.45;mix-blend-mode:screen;animation:drift 12s ease-in-out infinite;transition:opacity .28s ease, transform .4s ease}
+.blob.a{width:660px;height:660px;background:radial-gradient(circle at 25% 25%, var(--accent-a) 0%, rgba(92,200,255,0.65) 30%, transparent 52%);left:-160px;top:-140px;animation-duration:16s}
+.blob.b{width:760px;height:760px;background:radial-gradient(circle at 60% 40%, var(--accent-b) 0%, rgba(91,196,255,0.42) 28%, transparent 52%);right:-200px;bottom:-160px;opacity:0.38;animation-duration:18s}
+.blob.c{width:480px;height:480px;background:radial-gradient(circle at 50% 50%, var(--accent-c) 0%, rgba(155,92,255,0.55) 30%, transparent 52%);left:18%;bottom:-120px;opacity:0.32;animation-duration:20s}
+@keyframes drift{0%{transform:translateY(0) translateX(0) scale(1)}50%{transform:translateY(22px) translateX(28px) scale(1.06)}100%{transform:translateY(0) translateX(0) scale(1)}}
+
+/* layout: put stage on top and controls below so center-stage is large and visible */
+.container{position:relative;z-index:5;width:98vw;height:94vh;max-width:var(--maxw);display:flex;flex-direction:column;gap:18px;padding:28px}
+.viewport{background:linear-gradient(180deg, rgba(255,255,255,0.01), rgba(255,255,255,0.005));border-radius:18px;padding:28px;overflow:hidden;box-shadow:0 30px 80px rgba(0,0,0,0.75);position:relative}
+.viewport{ box-shadow: 0 0 15px #00f5d4; }
+/* .sidebar{position:fixed;left:10px;bottom:5px;background:transparent;padding:12px;border-radius:12px;display:flex;flex-direction:column;gap:12px} */
+.sidebar{background:transparent;}
+.stage{height:100%;position:relative;overflow:hidden}
+
+/* slide centering */
+.slide{position:absolute;inset:0;padding:32px;display:flex;flex-direction:column;gap:18px;opacity:0;transform:translateY(22px) scale(.995);pointer-events:none;transition:opacity .38s ease, transform .44s cubic-bezier(.2,.9,.3,1);justify-content:center}
+.slide.active{opacity:1;transform:none;pointer-events:auto}
+.h1{font-size:2.1rem;color:var(--accent-a);margin:0;letter-spacing:-0.6px}
+.h2{font-size:1.05rem;color:var(--muted);margin:0}
+.section-row{display:flex;gap:20px;align-items:stretch}
+.col{flex:1}
+
+.card{background:var(--card-bg);border-radius:12px;padding:18px;border:1px solid var(--card-border);box-shadow:0 8px 30px rgba(2,6,23,0.5)}
+.card .title-small{font-weight:700;color:var(--muted);margin-bottom:8px}
+.diagram{height:240px;border-radius:10px;background:linear-gradient(180deg, rgba(255,255,255,0.015), rgba(255,255,255,0.01));display:flex;align-items:center;justify-content:center;color:var(--muted)}
+.stat{font-size:2.2rem;color:#fff;font-weight:700}
+.small{font-size:0.96rem;color:var(--muted)}
+
+/* controls */
+.controls{display:flex;gap:12px;align-items:center;justify-content:space-between}
+.btn{background:linear-gradient(90deg,var(--accent-a),var(--accent-b),var(--accent-c));color:#001;border:0;box-shadow:0 12px 28px rgba(0,0,0,0.5);border:1px solid rgba(255,255,255,0.06);padding:10px 14px;border-radius:10px;cursor:pointer}
+.btn.primary{background:linear-gradient(90deg,var(--accent-a),var(--accent-b),var(--accent-c));color:#001;border:0;box-shadow:0 12px 28px rgba(0,0,0,0.5)}
+.thumbbar{display:flex;gap:8px;overflow-x:auto;padding:6px}
+.thumb{min-width:72px;height:48px;border-radius:8px;background:rgba(255,255,255,0.02);display:flex;align-items:center;justify-content:center;color:var(--muted);cursor:pointer;border:1px solid transparent}
+.thumb.active{border-color:rgba(92,200,255,0.12);transform:scale(1.03);color:var(--accent-b)}
+.progress{height:8px;background:rgba(255,255,255,0.02);border-radius:8px;overflow:hidden}
+.progress>i{display:block;height:100%;width:0%;background:linear-gradient(90deg,var(--accent-a),var(--accent-b),var(--accent-c));transition:width .28s linear}
+
+/*header*/
+.header-chip{display:inline-block;padding:6px 10px;border-radius:10px;background:linear-gradient(90deg,rgba(255,255,255,0.02),rgba(255,255,255,0.01));border:1px solid #00f5d4;color:var(--muted);font-size:0.9rem}
+
+/* footer-like sidebar appearance: full width strip under stage */
+.sidebar{order:2;align-self:stretch}
+.control-wrap{display:flex;gap:12px;flex-wrap:wrap}
+.nav-card{flex:1;min-width:240px}
+.thumbs-card{flex:2;min-width:320px}
+.progress-card{flex:1;min-width:240px}
+.mode-card{flex:1;min-width:200px}
+.nav-card, .thumbs-card, .progress-card, .mode-card{ border-color: rgb(155, 22, 238); border-left: #000; border-right: #000;}
+
+/* title row: meta aligned to right on wide screens */
+.title-row{display:flex;justify-content:space-between;align-items:flex-start}
+.title-row .meta{text-align:right}
+
+/* fullscreen rules */
+:fullscreen .present-root, :-webkit-full-screen .present-root, :-moz-full-screen .present-root {height:100vh;display:flex;align-items:center;justify-content:center}
+
+html.light .stat{ color: var(--muted) !important; }
+html.light .h1{ color: var(--accent-a) !important; }
+html.light .btn{ border-color: rgba(2,6,23,0.06); color: var(--muted); }
+html.light .btn.primary{ color: #001; box-shadow: 0 8px 20px rgba(0,0,0,0.08); }
+
+/* responsive */
+@media (min-width:1400px){
+  .viewport{height:74vh}
+}
+@media (max-width:1200px){.container{padding:14px}.title-row{flex-direction:column;gap:12px}.section-row{flex-direction:column}.control-wrap{flex-direction:column}}
+  </style>
+</head>
+<body>
+<div class="present-root">
+  <div class="bg-layer">
+    <div class="blob a"></div>
+    <div class="blob b"></div>
+    <div class="blob c"></div>
+  </div>
+
+  <div class="container" role="application" aria-label="FYP Presentation">
+
+    <div class="viewport">
+      <div class="stage" id="stage">
+
+        <!-- Slide 1: Title -->
+        <section class="slide active" data-notes="Introduction Of Project">
+          <div class="title-row" style="width:100%">
+            <div>
+              <div class="h1">Real-Time Sign Language Detection</div>
+              <div class="h2">InternShip Project — Intelligent Learn &amp; Interpret System (ASL &amp; ISL)</div>
+              <div style="height:8px"></div>
+              <div class="small"><strong> Prepared by : • Owaiz Ahmed • Syed Moaz •  
+                <br>Ghousia College Of Engineering • Computer Science </strong></div>
+            </div>
+            <div class="meta">
+              <div class="small">Supervisor: <strong>Prof. Ibrahim Khaleelulla Khan</strong></div>
+              <div class="small"><strong>Final Year • 7<sup>th</sup> Sem</strong></div>
+            </div>
+          </div>
+
+          <div class="section-row" style="margin-top:18px">
+            <div class="col card">
+              <div class="title-small">Project snapshot</div>
+              <div class="stat">Real-time gesture recognition + contextual translation</div>
+              <p class="small">Low-latency, edge-capable pipeline with Learn Mode for training and Interpret Mode for live conversations.</p>
+            </div>
+            <div style="width:320px;min-width:220px" class="card">
+              <div class="title-small">Quick actions</div>
+              <div style="margin-top:12px;display:flex;gap:8px">
+                <button id="enterFull" class="btn primary">Enter Presentation (Full Screen)</button>
+                <button id="jumpDemo" class="btn">Jump to Demo</button>
+              </div>
+              <div style="margin-top:12px" class="small">Tip: click above to allow fullscreen — required by browser.</div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Slide 2: Agenda -->
+        <section class="slide" data-notes="Give quick roadmap of slides and what you'll cover.">
+          <div>
+            <div class="h1">Agenda</div>
+            <div class="h2">Overview of what we will cover in this presentation</div>
+          </div>
+          <div style="margin-top:16px" class="section-row">
+            <div class="col card">
+              <ol style="margin-left:18px;color:var(--muted)">
+                <li>Problem & Objectives</li>
+                <li>Dataset & Annotation</li>
+                <li>Architecture & Model</li>
+                <li>Implementation & Demo</li>
+                <li>Results & Timeline</li>
+                <li>Risks, Ethics & Future Work</li>
+              </ol>
+            </div>
+            <div style="width:320px" class="card center">
+              <!-- <div class="small">Duration: ~12–15 mins (demo included)</div>
+              <div style="margin-top:12px" class="progress"><i id="p1" style="width:20%"></i></div>
+            </div>
+          </div> -->
+        </section>
+
+        <!-- Slide 3: Problem -->
+        <section class="slide" data-notes="Problem statement">
+          <div class="h1">Problem Statement</div>
+          <div class="section-row" style="margin-top:8px">
+            <div class="col card">
+              <div class="title-small">Why this matters</div>
+              <ul style="margin-left:18px;color:var(--muted)">
+                <li>Deaf/hearing communication gap in daily life</li>
+                <li>Lack of accessible, interactive learning tools</li>
+                <li>Existing systems either heavy or not real-time</li>
+              </ul>
+            </div>
+            <div style="width:320px" class="card">
+              <div class="title-small">Goal</div>
+              <p class="small">Create a fast, accurate, and usable system for both learning and live interpretation.</p>
+            </div>
+          </div>
+        </section>
+
+        <!-- Slide 4: Objectives -->
+        <section class="slide" data-notes="Objectives">
+          <div class="h1">Objectives</div>
+          <div class="section-row" style="margin-top:12px">
+            <div class="col card">
+              <ul style="margin-left:18px;color:var(--muted)">
+                <li>Detect core gesture vocabulary reliably (Top-1 ≥ 90%)</li>
+                <li>Interactive Learn Mode with voice feedback</li>
+                <li>Compact models for edge deployment</li>
+                <li>Clean UX & privacy-first design</li>
+              </ul>
+            </div>
+            <div style="width:320px" class="card">
+              <div class="title-small">Evaluation</div>
+              <p class="small">Accuracy, latency, confusion analysis, and user study for satisfaction.</p>
+            </div>
+          </div>
+        </section>
+
+        <!-- Slide 5: Related Work -->
+        <section class="slide" data-notes="Related work and our edge">
+          <div class="h1">Related Work</div>
+          <div class="section-row" style="margin-top:12px">
+            <div class="col card">
+              <div class="title-small">Existing approaches</div>
+              <ul style="margin-left:18px;color:var(--muted)">
+                <li>Raw image CNNs (accurate, heavy)</li>
+                <li>3D convnets for sequences (accurate, slow)</li>
+                <li>Landmark-based systems: efficient, explainable</li>
+              </ul>
+            </div>
+            <div style="width:320px" class="card">
+              <div class="title-small">Our contribution</div>
+              <p class="small">Hybrid pipeline: landmarks + light temporal model + reliable heuristics for core gestures.</p>
+            </div>
+          </div>
+        </section>
+
+        <!-- Slide 6: Architecture (SVG embedded for visibility) -->
+        <section class="slide" data-notes="Large architecture diagram">
+          <div class="h1">System Architecture</div>
+          <div class="section-row" style="margin-top:12px">
+            <div class="col card">
+              <div class="title-small">Overview</div>
+              <p class="small">Client captures webcam frames, extracts landmarks, then classification runs locally with optional cloud fallback for heavy models.</p>
+            </div>
+            <div style="width:620px;min-width:420px" class="card">
+              <div class="title-small">Architecture diagram</div>
+              <div class="diagram" style="height:380px">
+                <!-- BIGGER ARCHITECTURE SVG for readability -->
+                <svg viewBox="0 0 980 420" width="940" height="380" xmlns="http://www.w3.org/2000/svg">
+                  <defs>
+                    <linearGradient id="gA" x1="0" x2="1"><stop offset="0" stop-color="#00e6c3"/><stop offset="1" stop-color="#9b5cff"/></linearGradient>
+                  </defs>
+                  <rect x="12" y="12" width="220" height="120" rx="12" fill="#071018" stroke="#063" />
+                  <text x="122" y="70" fill="#cfe" font-size="16" font-weight="600" text-anchor="middle">Client (Browser)</text>
+                  <text x="122" y="92" fill="#9aa" font-size="12" text-anchor="middle">Webcam → Capture → Display</text>
+
+                  <rect x="260" y="12" width="220" height="120" rx="12" fill="#071018" stroke="#063" />
+                  <text x="370" y="70" fill="#cfe" font-size="16" font-weight="600" text-anchor="middle">Preprocess</text>
+                  <text x="370" y="92" fill="#9aa" font-size="12" text-anchor="middle">Crop, Normalize, Denoise</text>
+
+                  <rect x="510" y="12" width="420" height="120" rx="12" fill="#071018" stroke="#063" />
+                  <text x="720" y="60" fill="#cfe" font-size="16" font-weight="600" text-anchor="middle">MediaPipe Hands</text>
+                  <text x="720" y="84" fill="#9aa" font-size="12" text-anchor="middle">21 Landmarks (x,y,z) + handedness</text>
+
+                  <rect x="260" y="160" width="420" height="140" rx="12" fill="#071018" stroke="#063" />
+                  <text x="470" y="200" fill="#cfe" font-size="16" font-weight="600" text-anchor="middle">Classifier</text>
+                  <text x="470" y="224" fill="#9aa" font-size="12" text-anchor="middle">Rules + Per-frame CNN → Temporal Encoder</text>
+
+                  <rect x="260" y="320" width="220" height="80" rx="10" fill="#071018" stroke="#063" />
+                  <text x="370" y="360" fill="#cfe" font-size="14" font-weight="600" text-anchor="middle">UI / TTS / History</text>
+
+                  <!-- arrows -->
+                  <g stroke="url(#gA)" stroke-width="6" fill="none" marker-end="url(#mA)">
+                    <line x1="232" y1="72" x2="260" y2="72"/>
+                    <line x1="480" y1="72" x2="510" y2="72"/>
+                    <line x1="720" y1="132" x2="720" y2="160"/>
+                    <line x1="470" y1="300" x2="470" y2="320"/>
+                  </g>
+                  <defs>
+                    <marker id="mA" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#9df"/></marker>
+                  </defs>
+                </svg>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Slide 7: Landmarks (full 21-point SVG inserted) -->
+        <section class="slide" data-notes="MediaPipe 21 landmark indices & connections">
+          <div class="h1">Hand Landmarks (MediaPipe)</div>
+          <div class="section-row" style="margin-top:12px">
+            <div class="col card">
+              <div class="title-small">Definition</div>
+              <p class="small">MediaPipe provides 21 landmarks indexed 0..20. We use those to compute finger extension, relative distances and angles for robust classification.</p>
+            </div>
+            <div style="width:620px;min-width:420px" class="card">
+              <div class="title-small">21-point hand diagram </div>
+              <div class="diagram" style="height:380px">
+                <!-- Large, labeled MediaPipe-like hand SVG -->
+                <svg viewBox="0 0 420 380" width="420" height="360" xmlns="http://www.w3.org/2000/svg">
+                  <rect width="100%" height="100%" rx="8" fill="#071018"/>
+                  <!-- wrist (0) -->
+                  <circle cx="210" cy="320" r="8" fill="#00e6c3"/><text x="230" y="324" fill="#bff" font-size="12">0</text>
+
+                  <!-- Thumb: 1-4 -->
+                  <circle cx="160" cy="260" r="7" fill="#9b5cff"/><text x="178" y="262" fill="#bff" font-size="12">1</text>
+                  <circle cx="140" cy="220" r="7" fill="#9b5cff"/><text x="158" y="222" fill="#bff" font-size="12">2</text>
+                  <circle cx="125" cy="190" r="7" fill="#9b5cff"/><text x="142" y="192" fill="#bff" font-size="12">3</text>
+                  <circle cx="115" cy="160" r="7" fill="#9b5cff"/><text x="132" y="162" fill="#bff" font-size="12">4</text>
+
+                  <!-- Index: 5-8 -->
+                  <circle cx="185" cy="230" r="7" fill="#5cc8ff"/><text x="203" y="232" fill="#bff" font-size="12">5</text>
+                  <circle cx="180" cy="190" r="7" fill="#5cc8ff"/><text x="198" y="192" fill="#bff" font-size="12">6</text>
+                  <circle cx="175" cy="160" r="7" fill="#5cc8ff"/><text x="193" y="162" fill="#bff" font-size="12">7</text>
+                  <circle cx="170" cy="130" r="7" fill="#5cc8ff"/><text x="188" y="132" fill="#bff" font-size="12">8</text>
+
+                  <!-- Middle: 9-12 -->
+                  <circle cx="220" cy="220" r="7" fill="#00e6c3"/><text x="238" y="222" fill="#bff" font-size="12">9</text>
+                  <circle cx="225" cy="185" r="7" fill="#00e6c3"/><text x="243" y="187" fill="#bff" font-size="12">10</text>
+                  <circle cx="230" cy="150" r="7" fill="#00e6c3"/><text x="248" y="152" fill="#bff" font-size="12">11</text>
+                  <circle cx="235" cy="120" r="7" fill="#00e6c3"/><text x="253" y="122" fill="#bff" font-size="12">12</text>
+
+                  <!-- Ring: 13-16 -->
+                  <circle cx="265" cy="235" r="7" fill="#ff7ab6"/><text x="283" y="237" fill="#bff" font-size="12">13</text>
+                  <circle cx="280" cy="205" r="7" fill="#ff7ab6"/><text x="298" y="207" fill="#bff" font-size="12">14</text>
+                  <circle cx="295" cy="180" r="7" fill="#ff7ab6"/><text x="313" y="182" fill="#bff" font-size="12">15</text>
+                  <circle cx="310" cy="155" r="7" fill="#ff7ab6"/><text x="328" y="157" fill="#bff" font-size="12">16</text>
+
+                  <!-- Pinky: 17-20 -->
+                  <circle cx="330" cy="265" r="7" fill="#a1f0ff"/><text x="348" y="267" fill="#bff" font-size="12">17</text>
+                  <circle cx="345" cy="235" r="7" fill="#a1f0ff"/><text x="363" y="237" fill="#bff" font-size="12">18</text>
+                  <circle cx="355" cy="210" r="7" fill="#a1f0ff"/><text x="373" y="212" fill="#bff" font-size="12">19</text>
+                  <circle cx="365" cy="185" r="7" fill="#a1f0ff"/><text x="383" y="187" fill="#bff" font-size="12">20</text>
+
+                  <!-- connections (skeleton) -->
+                  <g stroke="#6ff" stroke-width="2" fill="none">
+                    <!-- wrist to thumb chain -->
+                    <path d="M210,320 C190,280 170,260 160,260" />
+                    <path d="M160,260 C150,235 140,220 125,190" />
+                    <path d="M125,190 C120,175 118,170 115,160" />
+
+                    <!-- wrist to index -->
+                    <path d="M210,320 C200,260 190,240 185,230" />
+                    <path d="M185,230 C183,210 180,195 175,160" />
+                    <path d="M175,160 C173,145 172,138 170,130" />
+
+                    <!-- middle -->
+                    <path d="M210,320 C215,260 220,240 220,220" />
+                    <path d="M220,220 C223,200 225,185 230,150" />
+                    <path d="M230,150 C233,135 234,128 235,120" />
+
+                    <!-- ring -->
+                    <path d="M210,320 C230,270 255,250 265,235" />
+                    <path d="M265,235 C272,220 280,205 295,180" />
+                    <path d="M295,180 C300,165 305,160 310,155" />
+
+                    <!-- pinky -->
+                    <path d="M210,320 C250,280 290,270 330,265" />
+                    <path d="M330,265 C335,250 345,235 355,210" />
+                    <path d="M355,210 C360,195 363,190 365,185" />
+                  </g>
+
+                  <!-- legend -->
+                  <text x="18" y="24" fill="#9aa" font-size="12">Numbered indices (0-20) — used for feature computation</text>
+                </svg>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Slide 8: Features & Augmentation -->
+        <section class="slide" data-notes="Feature extraction & augmentation">
+          <div class="h1">Features & Augmentation</div>
+          <div class="section-row" style="margin-top:12px">
+            <div class="col card">
+              <div class="title-small">Features</div>
+              <ul style="margin-left:18px;color:var(--muted)">
+                <li>Normalized distances & angles between key joints</li>
+                <li>Finger extension booleans</li>
+                <li>Temporal smoothing & buffering</li>
+              </ul>
+            </div>
+            <div style="width:620px;min-width:420px" class="card">
+              <div class="title-small">Augmentations</div>
+              <div class="diagram">Flip, scale, brightness jitter, temporal cropping — applied to frames & landmark noise simulation (make model robust).</div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Slide 9: Classification Pipeline (SVG embedded) -->
+        <section class="slide" data-notes="Per-frame -> temporal classifier">
+          <div class="h1">Classification Pipeline</div>
+          <div class="section-row" style="margin-top:12px">
+            <div class="col card">
+              <div class="title-small">Hybrid approach</div>
+              <p class="small">Fast rule heuristics for obvious gestures; temporal model (light Transformer / BiLSTM) for ambiguous sequences. Quantize model for edge deployment.</p>
+            </div>
+            <div style="width:620px;min-width:420px" class="card">
+              <div class="title-small">Pipeline visual</div>
+              <div class="diagram" style="height:240px">
+                <svg viewBox="0 0 900 240" width="880" height="220" xmlns="http://www.w3.org/2000/svg">
+                  <rect x="10" y="40" width="140" height="80" rx="8" fill="#071018" stroke="#06c"/><text x="80" y="90" fill="#bff" font-size="14" text-anchor="middle">Frames</text>
+                  <rect x="170" y="20" width="200" height="120" rx="8" fill="#071018" stroke="#06c"/><text x="270" y="80" fill="#bff" font-size="14" text-anchor="middle">Per-frame Feature Extractor</text>
+                  <rect x="390" y="40" width="200" height="80" rx="8" fill="#071018" stroke="#06c"/><text x="490" y="90" fill="#bff" font-size="14" text-anchor="middle">Temporal Encoder</text>
+                  <rect x="610" y="40" width="220" height="80" rx="8" fill="#071018" stroke="#06c"/><text x="720" y="90" fill="#bff" font-size="14" text-anchor="middle">Softmax &amp; Smoothing</text>
+                  <g stroke="url(#grad1)" stroke-width="5" fill="none" marker-end="url(#arr1)"><line x1="150" y1="80" x2="170" y2="80"/><line x1="370" y1="80" x2="390" y2="80"/><line x1="590" y1="80" x2="610" y2="80"/></g>
+                  <defs><linearGradient id="grad1"><stop offset="0" stop-color="#00e6c3"/><stop offset="1" stop-color="#9b5cff"/></linearGradient>
+                  <marker id="arr1" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#9df"/></marker></defs>
+                </svg>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Slide 10: Dataset -->
+        <section class="slide" data-notes="Dataset details">
+          <div class="h1">Dataset</div>
+          <div class="section-row" style="margin-top:12px">
+            <div class="col card">
+              <div class="title-small">Composition</div>
+              <ul style="margin-left:18px;color:var(--muted)">
+                <li>Custom collected recordings from multiple signers</li>
+                <li>Augmented with public ASL subsets</li>
+                <li>Per-frame landmark + class labels</li>
+              </ul>
+            </div>
+            <div style="width:620px;min-width:420px" class="card">
+              <div class="title-small">Labeling & quality</div>
+              <p class="small">Quality checks, consensus labeling for ambiguous gestures, test/train split with signer separation to measure generalization.</p>
+            </div>
+          </div>
+        </section>
+
+        <!-- Slide 11: Training & Optimization -->
+        <section class="slide" data-notes="Training pipeline & optimizations">
+          <div class="h1">Training & Optimization</div>
+          <div class="section-row" style="margin-top:12px">
+            <div class="col card">
+              <div class="title-small">Training</div>
+              <ul style="margin-left:18px;color:var(--muted)">
+                <li>Quantization-aware training</li>
+                <li>Knowledge distillation for tiny models</li>
+                <li>Early stopping & weighted loss for class imbalance</li>
+              </ul>
+            </div>
+            <div style="width:620px;min-width:420px" class="card">
+              <div class="title-small">Model size & latency</div>
+              <p class="small">Target: <strong>&lt; 2MB</strong> model (TFLite) and inference ≤50ms on edge prototype.</p>
+            </div>
+          </div>
+        </section>
+
+        <!-- Slide 12: Backend -->
+        <section class="slide" data-notes="Key backend routes & camera loop">
+          <div class="h1">Backend (Flask)</div>
+          <div class="section-row" style="margin-top:12px">
+            <div class="col card">
+              <div class="title-small">Key routes</div>
+              <ul style="margin-left:18px;color:var(--muted)">
+                <li><code>/video_feed</code> — multipart MJPEG stream</li>
+                <li><code>/gesture</code> — returns latest label JSON</li>
+                <li><code>/start_camera</code> / <code>/stop_camera</code> for control</li>
+              </ul>
+            </div>
+            <div style="width:620px;min-width:420px" class="card">
+              <div class="title-small">Camera loop (high level)</div>
+              <pre style="white-space:pre-wrap;color:#cfe">cap = cv2.VideoCapture(0)
+while camera_running:
+  ret, frame = cap.read()
+  frame = cv2.flip(frame,1)
+  results = hands.process(rgb)
+  if results.multi_hand_landmarks:
+    gesture = classify_gesture(...)</pre>
+            </div>
+          </div>
+        </section>
+
+        <!-- Slide 13: Frontend & UX -->
+        <section class="slide" data-notes="Pages: login/dashboard/learn/interpret">
+          <div class="h1">Frontend & UX</div>
+          <div class="section-row" style="margin-top:12px">
+            <div class="col card">
+              <div class="title-small">Pages & features</div>
+              <ul style="margin-left:18px;color:var(--muted)">
+                <li>Login / Register</li><li>Dashboard selector</li><li>Learn Mode with hover-to-play</li><li>Interpret Mode with history &amp; TTS</li>
+              </ul>
+            </div>
+            <div style="width:620px;min-width:420px" class="card">
+              <div class="title-small">Controls</div>
+              <p class="small">Start/Stop camera, toggle landmarks, voice, meaning, and a persistent gesture history panel for context.</p>
+            </div>
+          </div>
+        </section>
+
+        <!-- Slide 14: Demo Steps -->
+        <section class="slide" data-notes="Demo steps to run in viva">
+          <div class="h1">Demo Script</div>
+          <div class="section-row" style="margin-top:12px">
+            <div class="col card">
+              <ol style="margin-left:18px;color:var(--muted)">
+                <li>Open dashboard → Interpret Mode</li>
+                <li>Start camera → show landmarks</li>
+                <li>Demonstrate gestures and show history</li>
+                <li>Switch to Learn Mode → hover gesture cards</li>
+              </ol>
+            </div>
+            <div style="width:620px;min-width:420px" class="card">
+              <div class="title-small">Demo notes</div>
+              <p class="small">Use consistent lighting and plain background for best accuracy in demo.</p>
+            </div>
+          </div>
+        </section>
+
+        <!-- Slide 15: Results (chart SVG embedded) -->
+        <section class="slide" data-notes="Results & metrics">
+          <div class="h1">Results</div>
+          <div class="section-row" style="margin-top:12px">
+            <div class="col card">
+              <div class="title-small">Metrics</div>
+              <ul style="margin-left:18px;color:var(--muted)">
+                <li>Top-1 accuracy: <strong>92%</strong></li>
+                <li>Avg inference latency: <strong>48 ms</strong></li>
+                <li>User satisfaction: <strong>85%</strong></li>
+              </ul>
+            </div>
+            <div style="width:620px;min-width:420px" class="card">
+              <div class="title-small">Performance chart</div>
+              <div class="diagram" style="height:240px">
+                <svg viewBox="0 0 700 260" width="680" height="240" xmlns="http://www.w3.org/2000/svg">
+                  <rect x="20" y="20" width="660" height="220" rx="8" fill="#071018"/>
+                  <text x="350" y="40" fill="#9aa" font-size="12" text-anchor="middle">Accuracy &amp; Latency (sample)</text>
+                  <rect x="80" y="120" width="80" height="100" rx="6" fill="#00e6c3"/><text x="120" y="240" fill="#bff" font-size="12" text-anchor="middle">Train</text>
+                  <rect x="220" y="80" width="80" height="140" rx="6" fill="#8a2be2"/><text x="260" y="240" fill="#bff" font-size="12" text-anchor="middle">Val</text>
+                  <rect x="360" y="100" width="80" height="120" rx="6" fill="#5cc8ff"/><text x="400" y="240" fill="#bff" font-size="12" text-anchor="middle">Test</text>
+                  <rect x="500" y="160" width="80" height="60" rx="6" fill="#ff8a8a"/><text x="540" y="240" fill="#bff" font-size="12" text-anchor="middle">Latency(ms)</text>
+                </svg>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Slide 16: Confusion Matrix (SVG embedded) -->
+        <section class="slide" data-notes="Confusion matrix shown clearly">
+          <div class="h1">Confusion Matrix</div>
+          <div class="section-row" style="margin-top:12px">
+            <div class="col card">
+              <div class="title-small">Confusion matrix (sample)</div>
+              <div class="diagram" style="height:380px">
+                <svg viewBox="0 0 520 420" width="500" height="380" xmlns="http://www.w3.org/2000/svg">
+                  <rect width="100%" height="100%" rx="8" fill="#071018"/>
+                  <!-- <text x="260" y="28" fill="#9aa" font-size="12" text-anchor="middle">Confusion Matrix (replace with real export)</text> -->
+                  <!-- grid 6x6 -->
+                  <g transform="translate(40,40)">
+                    <g stroke="#072" stroke-width="1.2"></g>
+                    <text x="0" y="-10" fill="#bff">Actual →</text>
+                    <text x="200" y="-10" fill="#bff">Predicted →</text>
+                    <g>
+                      <rect x="0" y="0" width="48" height="48" fill="#002b2b"/><rect x="52" y="0" width="48" height="48" fill="#003b5a"/><rect x="104" y="0" width="48" height="48" fill="#005c9b"/><rect x="156" y="0" width="48" height="48" fill="#007ab3"/><rect x="208" y="0" width="48" height="48" fill="#1aa3ff"/><rect x="260" y="0" width="48" height="48" fill="#7ad0ff"/>
+                      <rect x="0" y="52" width="48" height="48" fill="#00302f"/><rect x="52" y="52" width="48" height="48" fill="#00434d"/><rect x="104" y="52" width="48" height="48" fill="#006b88"/><rect x="156" y="52" width="48" height="48" fill="#178aa8"/><rect x="208" y="52" width="48" height="48" fill="#5cc8ff"/><rect x="260" y="52" width="48" height="48" fill="#aeefff"/>
+                      <rect x="0" y="104" width="48" height="48" fill="#002a2a"/><rect x="52" y="104" width="48" height="48" fill="#003c4a"/><rect x="104" y="104" width="48" height="48" fill="#006c95"/><rect x="156" y="104" width="48" height="48" fill="#0f86b7"/><rect x="208" y="104" width="48" height="48" fill="#41c2ff"/><rect x="260" y="104" width="48" height="48" fill="#9fe7ff"/>
+                      <rect x="0" y="156" width="48" height="48" fill="#022829"/><rect x="52" y="156" width="48" height="48" fill="#013b49"/><rect x="104" y="156" width="48" height="48" fill="#006b88"/><rect x="156" y="156" width="48" height="48" fill="#138aa0"/><rect x="208" y="156" width="48" height="48" fill="#5cd2ff"/><rect x="260" y="156" width="48" height="48" fill="#c8f7ff"/>
+                      <rect x="0" y="208" width="48" height="48" fill="#02292a"/><rect x="52" y="208" width="48" height="48" fill="#02414b"/><rect x="104" y="208" width="48" height="48" fill="#00657f"/><rect x="156" y="208" width="48" height="48" fill="#007a96"/><rect x="208" y="208" width="48" height="48" fill="#6fe4ff"/><rect x="260" y="208" width="48" height="48" fill="#d6fbff"/>
+                      <rect x="0" y="260" width="48" height="48" fill="#012829"/><rect x="52" y="260" width="48" height="48" fill="#05424a"/><rect x="104" y="260" width="48" height="48" fill="#0b6b85"/><rect x="156" y="260" width="48" height="48" fill="#1a849a"/><rect x="208" y="260" width="48" height="48" fill="#8fe9ff"/><rect x="260" y="260" width="48" height="48" fill="#eaffff"/>
+                    </g>
+                  </g>
+                </svg>
+              </div>
+            </div>
+            <div style="width:320px" class="card"><div class="title-small">Notes</div><p class="small">Confusions highlight visually similar gestures — targeted augmentation & more data per-class recommended.</p></div>
+          </div>
+        </section>
+
+        <!-- Slide 17: Applications -->
+        <section class="slide" data-notes="Applications">
+          <div class="h1">Applications</div>
+          <div class="section-row" style="margin-top:12px">
+            <div class="col card"><ul style="margin-left:18px;color:var(--muted)"><li>Education platforms for sign learning</li><li>Live interpreters in public kiosks</li><li>Assistive tools in hospitals & banks</li></ul></div>
+            <div style="width:620px;min-width:420px" class="card"><div class="title-small">Deployment</div><p class="small">Mobile (TFLite), edge devices, or web with TF.js fallback & server inference for heavy models.</p></div>
+          </div>
+        </section>
+
+        <!-- Slide 18: Future Work -->
+        <section class="slide" data-notes="Future improvements">
+          <div class="h1">Future Work</div>
+          <div class="section-row" style="margin-top:12px">
+            <div class="col card"><ul style="margin-left:18px;color:var(--muted)"><li>Expand gesture vocabulary & continuous sentence translation</li><li>Speaker-independent models & cross-cultural signs</li><li>On-device personalization & active learning</li></ul></div>
+            <div style="width:620px;min-width:420px" class="card"><div class="title-small">Research directions</div><p class="small">Add face/pose modality, emotion/context cues and model explainability tools.</p></div>
+          </div>
+        </section>
+
+        <!-- Slide 19: Conclusion -->
+        <section class="slide" data-notes="Conclusion summary">
+          <div class="h1">Conclusion</div>
+          <div class="section-row" style="margin-top:12px">
+            <div class="col card"><div class="title-small">Final summary</div><p class="small">A practical web-native prototype with high accuracy and low latency, plus an accessible Learn Mode — ready for field evaluation and mobile optimization.</p></div>
+            <div style="width:620px;min-width:420px" class="card"><div class="title-small">Deliverables</div><p class="small">Working prototype, dataset & training pipeline, and a clear plan for edge deployment.</p></div>
+          </div>
+        </section>
+
+        <!-- Slide 20: Questions & Thank You -->
+        <section class="slide" data-notes="Invite questions & thank panel">
+          <div style="text-align:center;margin-top:24px">
+            <!-- <h1 style="font-size:2.6rem;color:var(--accent-b);margin-bottom:8px">Any Questions?</h1> -->
+            <h1 style="font-size:2.6rem;color: rgb(151, 15, 210);margin-bottom:8px">Any Questions?</h1>
+            <p class="small" style="font-size:1.05rem;color:#bff;margin-bottom:18px">am happy to demo specific parts; Please ask.</p>
+            <div style="display:inline-block;background:linear-gradient(90deg,var(--accent-a),var(--accent-b));padding:20px 28px;border-radius:14px;color:#001;font-weight:700;box-shadow:0 12px 30px rgba(0,0,0,0.5)">
+              Thank You! 
+            </div>
+            <div style="margin-top:12px;color:var(--muted)">Contact : <strong>Owaiz Ahmed(8431290341) OR Syed Moaz(8050463218)</strong></div>
+          </div>
+        </section>
+
+      </div> <!-- stage -->
+
+      <div class="notes" id="notesBox" aria-hidden="true">Notes will appear here</div>
+
+    </div> <!-- viewport -->
+
+    <!-- Controls strip under stage -->
+    <aside class="sidebar" aria-label="Controls and navigation">
+      <div class="control-wrap">
+        <div class="card nav-card">
+          <div style="display:flex;justify-content:space-between;align-items:center">
+            <div class="small">Navigation</div>
+            <div class="small hint">Press F for fullscreen</div>
+          </div>
+          <div style="margin-top:10px;display:flex;gap:8px">
+            <button id="prev" class="btn">◀ Prev</button>
+            <button id="next" class="btn primary">Next ▶</button>
+          </div>
+        </div>
+
+        <div class="card thumbs-card">
+          <div class="small">Thumbnails</div>
+          <div class="thumbbar" id="thumbs"></div>
+        </div>
+
+        <div class="card progress-card">
+          <div class="small">Progress</div>
+          <div style="margin-top:8px" class="progress"><i id="progFill"></i></div>
+        </div>
+
+        <div class="card mode-card">
+          <div class="small">Mode</div>
+          <div style="margin-top:8px;display:flex;gap:8px;align-items:center">
+            <button id="modeSwap" class="btn">Switch to Light Mode</button>
+            <div style="flex:1;text-align:right"><span class="header-chip" id="currentMode">Dark</span></div>
+          </div>
+        </div>
+
+      </div>
+    </aside>
+
+  </div> <!-- container -->
+</div>
+
+<script>
+(function(){
+  const slides = Array.from(document.querySelectorAll('.slide'));
+  const thumbsRoot = document.getElementById('thumbs');
+  const prev = document.getElementById('prev');
+  const next = document.getElementById('next');
+  const prog = document.getElementById('progFill');
+  const enterFull = document.getElementById('enterFull');
+  const jumpDemo = document.getElementById('jumpDemo');
+  const notesBox = document.getElementById('notesBox');
+  const startCam = document.getElementById('startCam');
+  const stopCam = document.getElementById('stopCam');
+  const demoCam = document.getElementById('demoCam');
+  const modeSwap = document.getElementById('modeSwap');
+  const currentMode = document.getElementById('currentMode');
+
+  let idx = 0;
+  function refresh(){
+    slides.forEach((s,i)=>{ s.classList.toggle('active', i===idx); });
+    thumbsRoot.querySelectorAll('.thumb').forEach((t,i)=> t.classList.toggle('active', i===idx));
+    const p = Math.round(((idx+1)/slides.length)*100);
+    if(prog) prog.style.width = p + '%';
+    notesBox.textContent = slides[idx].dataset.notes || 'No notes for this slide.';
+  }
+
+  slides.forEach((s,i)=>{
+    const t = document.createElement('div'); t.className='thumb'+(i===0?' active':''); t.textContent = i+1; t.title = s.querySelector('.h1')?.textContent?.slice(0,40) || 'Slide '+(i+1);
+    t.addEventListener('click', ()=>{ idx = i; refresh(); });
+    thumbsRoot.appendChild(t);
+  });
+
+  prev && prev.addEventListener('click', ()=>{ idx = (idx-1+slides.length)%slides.length; refresh(); });
+  next && next.addEventListener('click', ()=>{ idx = (idx+1)%slides.length; refresh(); });
+  document.addEventListener('keydown', (e)=>{ if(e.key==='ArrowRight') next.click(); if(e.key==='ArrowLeft') prev.click(); if(e.key==='f' || e.key==='F') requestFull(); if(e.key==='d' || e.key==='D') jumpToDemo(); });
+
+  function requestFull(){
+    if(!document.fullscreenElement && !document.webkitFullscreenElement){
+      const el = document.documentElement;
+      if(el.requestFullscreen) el.requestFullscreen().catch(()=>{});
+      else if(el.webkitRequestFullscreen) el.webkitRequestFullscreen();
+    } else {
+      if(document.exitFullscreen) document.exitFullscreen().catch(()=>{});
+      else if(document.webkitExitFullscreen) document.webkitExitFullscreen();
+    }
+  }
+  enterFull && enterFull.addEventListener('click', requestFull);
+
+  function jumpToDemo(){ idx = Math.min(5, slides.length-1); refresh(); }
+  jumpDemo && jumpDemo.addEventListener('click', jumpToDemo);
+
+  // Mode swap
+  let light = false;
+  modeSwap && modeSwap.addEventListener('click', ()=>{
+    light = !light;
+    if(light){
+      document.documentElement.classList.add('light');
+      modeSwap.textContent = 'Switch to Dark Mode';
+      currentMode.textContent = 'Light';
+    } else {
+      document.documentElement.classList.remove('light');
+      modeSwap.textContent = 'Switch to Light Mode';
+      currentMode.textContent = 'Dark';
+    }
+  });
+
+  const blobs = document.querySelectorAll('.blob');
+  document.addEventListener('mousemove', ()=>{ blobs.forEach(b=>{ b.style.opacity = '0.6'; }); });
+  document.addEventListener('mouseleave', ()=>{ blobs.forEach(b=>{ b.style.opacity = ''; }); });
+
+  function onFullChange(){ document.body.style.minHeight = '100vh'; setTimeout(()=>{ document.body.style.minHeight = ''; }, 60); }
+  document.addEventListener('fullscreenchange', onFullChange);
+  document.addEventListener('webkitfullscreenchange', onFullChange);
+  document.addEventListener('mozfullscreenchange', onFullChange);
+
+  refresh();
+})();
+</script>
+</body>
+</html>

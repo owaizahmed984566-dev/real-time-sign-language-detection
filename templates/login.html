@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sign Language Environment - Login</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+  <style>
+    body {
+      background: url('../static/pic/_Thumbs Up in Digital Light_.png') no-repeat center center fixed;
+      background-size: cover;
+      font-family: Roboto, sans-serif;
+      height: 100vh;
+      margin: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .image-100 {
+      position: absolute;
+      top: 26%;
+      left: 83%;
+      width: 130px;
+      height: auto;
+    }
+
+    .top-left-image {
+      position: absolute;
+      top: 20px;
+      left: 20px;
+      width: 140px;
+      height: auto;
+      z-index: 10;
+      box-shadow: 0 0 12px #00f5d4;
+      border-radius: 8px;
+    }
+
+    .login-box {
+      background: rgba(255,255,255,0.03);
+      padding: 36px;
+      border-radius: 14px;
+      width: 380px;
+      text-align: center;
+      box-shadow: 0 0 15px #00f5d4;
+      transform: scale(1.05);
+      position: relative;
+    }
+
+    .brand {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 22px;
+      margin-bottom: 6px;
+      text-shadow: 0 0 8px #00f5d4;
+    }
+
+    input {
+      width: 93.5%;
+      padding: 12px;
+      margin: 8px 0;
+      border-radius: 8px;
+      border: none;
+      font-weight: normal;
+    }
+
+    .password-container {
+      position: relative;
+      width: 100%;
+    }
+
+    .toggle-password {
+      position: absolute;
+      top: 50%;
+      right: 12px;
+      transform: translateY(-50%);
+      cursor: pointer;
+      display: none;
+    }
+
+    .half-eye {
+      position: relative;
+      width: 26px;
+      height: 13px;
+      border-top: 2px solid rgba(0,0,0,0.5);
+      border-radius: 100px 100px 0 0;
+    }
+
+    .half-eye::after {
+      content: "";
+      position: absolute;
+      top: 4px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 7px;
+      height: 7px;
+      background-color: rgba(0,0,0,0.5);
+      border-radius: 50%;
+    }
+
+    .half-eye.active {
+      border-top-color: rgba(0,0,0,1);
+    }
+
+    .half-eye.active::after {
+      background-color: rgba(0,0,0,1);
+    }
+
+    button {
+      background: black;
+      border-color: white;
+      padding: 12px;
+      width: 100%;
+      border-radius: 8px;
+      cursor: pointer;
+      color: white;
+      font-weight: bold;
+    }
+
+    .small-btn {
+      display: inline-block;
+      width: 48%;
+      text-align: center;
+      padding: 10px;
+      border-radius: 8px;
+      border: 1px solid #00f5d4;
+      color: #00f5d4;
+      text-decoration: none;
+    }
+
+    .small-btn:hover {
+      transform: scale(1.05);
+      box-shadow: 0 0 15px #00f5d4;
+      text-shadow: 0 0 15px #00f5d4;
+    }
+
+    .flash {
+      margin-top: 10px;
+      color: whitesmoke;
+    }
+
+    .mission-box {
+      position: absolute;
+      top: 40px;
+      right: 60px;
+      max-width: 320px;
+      color: #ffffff;
+      font-family: Roboto, sans-serif;
+      font-size: 14px;
+      line-height: 1.5;
+    }
+
+    .mission-box h3 {
+      margin-top: 0;
+      color: #00f5d4;
+      font-size: 16px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+  </style>
+</head>
+<body>
+
+  <img src="{{ url_for('static', filename='pic/mqdefault.jpg') }}" alt="Your Time is Now" class="top-left-image">
+
+  <div class="container-100">
+    <img src="static/pic/1000_F_238147637_lX2ojdHWrohRzpvbCz6huT8Vs3rWDbgo.jpg" alt="Sample Image" class="image-100">
+  </div>
+
+  <div class="mission-box">
+    <h3>Our Mission</h3>
+    <p>Our mission is to seamlessly bridge the communication gap between the deaf and hearing communities through innovative, real-time sign language detection technology.</p>
+  </div>
+
+  <div class="login-box">
+    <div class="brand">Sign Language Environment</div>
+    <div class="subtitle">Bridging communication with real-time gestures</div>
+
+    <form method="POST" action="{{ url_for('login') }}">
+      <input type="text" name="username" placeholder="Username" required>
+      <div class="password-container">
+        <input type="password" name="password" id="password" placeholder="Password" required>
+        <div class="toggle-password" id="togglePassword">
+          <div class="half-eye"></div>
+        </div>
+      </div>
+      <button type="submit">Login</button>
+    </form>
+
+    <div style="display:flex; gap:10px; margin-top:12px;">
+      <a href="{{ url_for('register') }}" class="small-btn">Register</a>
+      <a href="{{ url_for('about') }}" class="small-btn">About</a>
+    </div>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        {% for category, message in messages %}
+          <div class="flash">{{ message }}</div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+  </div>
+
+  <script>
+    const passwordInput = document.getElementById('password');
+    const togglePassword = document.getElementById('togglePassword');
+    const halfEye = togglePassword.querySelector('.half-eye');
+
+    passwordInput.addEventListener('input', () => {
+      togglePassword.style.display = passwordInput.value.length > 0 ? 'block' : 'none';
+    });
+
+    togglePassword.addEventListener('click', () => {
+      const type = passwordInput.type === 'password' ? 'text' : 'password';
+      passwordInput.type = type;
+      passwordInput.style.fontWeight = type === 'text' ? 'bold' : 'normal';
+      halfEye.classList.toggle('active');
+    });
+  </script>
+
+</body>
+</html>
